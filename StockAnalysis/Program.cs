@@ -1,38 +1,30 @@
-﻿using StockAnalysis;
+﻿namespace StockAnalysis;
 
-internal class Program
+internal static class Program
 {
-    static void Main(string[] args)
+    internal static void Main(string[] args)
     {
         try
         {
-            // Step 1: Read the data from the file
-            var stockData = StockDataReader.FromCsvFile("Data/Stock_1.csv");
-            
-            // Step 2: Sort the data within each group based on date
-            decimal globalLargestIncreasingPrice = 0;
-            var largestIncreasingPriceStockName = string.Empty;
-            foreach (var kv in stockData)
+            if (args.Length == 0)
             {
-                var timeOrderedPrices = kv.Value.OrderBy(sr => sr.Date).Select(sr => sr.Value).ToList();
-                var largestIncrease = timeOrderedPrices.FindLargestIncreasingPrice();
-
-                if (largestIncrease > globalLargestIncreasingPrice)
-                {
-                    globalLargestIncreasingPrice = largestIncrease;
-                    largestIncreasingPriceStockName = kv.Key;
-                }
+                throw new ArgumentNullException(nameof(args), "Please provide file path");
             }
+
+            var result = Analyzer.FromCsv(args[0]);
             
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine(string.IsNullOrWhiteSpace(largestIncreasingPriceStockName) ? "nil" : $"Company: {largestIncreasingPriceStockName}, Largest price increase: {globalLargestIncreasingPrice}");
-            Console.ResetColor();
+            Print(result.HasAbsoluteIncrease ? $"Company: {result.StockName}, Largest price increase: {result.IncreasedPrice}" : "nil");
         }
         catch (Exception ex)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine(ex);
-            Console.ResetColor();
+            Print(ex.ToString(), isError: true);
         }
+    }
+
+    private static void Print(string message, bool isError = false)
+    {
+        Console.ForegroundColor = isError ? ConsoleColor.Red : ConsoleColor.Green;
+        Console.WriteLine(message);
+        Console.ResetColor();
     }
 }
